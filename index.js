@@ -25,8 +25,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 // app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.static('public'));
 
-app.get('/', function (req,res) {
-    res.render('index');
+app.get('/', async (req,res) => {
+    const posts = await Post.find({})
+    res.render('index',{posts})
 });
 
 app.get('/about', function  (req, res) {
@@ -37,8 +38,9 @@ app.get('/contact', function  (req, res) {
     res.sendFile(path.resolve(__dirname, 'pages/contact.html'));
 });
 
-app.get('/post', function  (req, res) {
-    res.sendFile(path.resolve(__dirname, 'pages/post.html'));
+app.get('/post/:id', async  (req, res) => {
+    const post = await Post.findById(req.params.id)
+    res.render('post', {post})
 });
 
 app.get('/posts/new', function (req, res) {
@@ -47,10 +49,11 @@ app.get('/posts/new', function (req, res) {
 
 app.post('/posts/store', function(req, res){
     Post.create(req.body, function(err, post){
+        console.log(post);
         res.redirect('/');
     });
 });
 
 app.listen(port, () =>{
-    console.log('App listening on port 4000');
+    console.log('App listening on port:' , port);
 });
