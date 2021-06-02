@@ -3,10 +3,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const fileUpload = require("express-fileupload");
 
-const Post = require("./database/models/Post");
+const createPostController = require('./controllers/creatPost')
+const getPostController = require('./controllers/getPost')
+const homePageController = require('./controllers/homePage')
+const storePostController = require('./controllers/storePost')
 
 const app = express();
-const port = 4000;
 
 mongoose
 	.connect("mongodb://localhost/node-blog", {
@@ -29,46 +31,18 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(fileUpload())
 
-
-app.get("/", async (req, res) => {
-	const posts = await Post.find({}).sort({createdAt: -1});
-	res.render("index", { posts });
-});
-
-app.get("/about", function (req, res) {
-	res.sendFile(path.resolve(__dirname, "pages/about.html"));
-});
-
-app.get("/contact", function (req, res) {
-	res.sendFile(path.resolve(__dirname, "pages/contact.html"));
-});
-
-app.get("/post/:id", async (req, res) => {
-	const post = await Post.findById(req.params.id);
-	res.render("post", { post });
-});
-
-app.get("/posts/new", function (req, res) {
-	res.render("create");
-});
-
-app.post("/posts/store", (req, res) => {
-    const {
-        image
-    } = req.files
-
-    image.mv(path.resolve(__dirname, 'public/posts', image.name), (error) => {
-        Post.create({
-            ...req.body,
-            image: `/posts/${image.name}`
-        }, (error, post) => {
-            console.error(error, post);
-            res.redirect('/');
-        });
-    })
-});
+// add new post req validation
+const storePost = require("./middleware/storePost")
+app.use("/posts/store", storePost)
 
 
-app.listen(port, () => {
-	console.log("App listening on port:", port);
+app.get("/", homePageController);
+app.get("/post/:id", getPostController);
+app.get("/posts/new", createPostController);
+app.post("/posts/store", storePostController);
+
+const PORT = 4000;
+
+app.listen(PORT, () => {
+	console.log("App listening on port:", PORT);
 });
